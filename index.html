@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>某云工具集</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            /* PC端壁纸 */
+            background-image: url('https://haowallpaper.com/link/common/file/previewFileImg/15557854820208960');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed; /* 固定背景 */
+            transition: background-image 0.5s ease-in-out;
+        }
+
+        header {
+            background-color: rgba(36, 36, 36, 0.8); /* 半透明背景以增强可读性 */
+            color: white;
+            padding: 10px;
+            text-align: center;
+            position: relative;
+            z-index: 1; /* 确保标题在背景之上 */
+        }
+
+        nav {
+            background-color: rgba(51, 51, 51, 0.8); /* 半透明 */
+            color: white;
+            width: 200px;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            padding-top: 20px;
+            z-index: 1; /* 确保导航栏在背景之上 */
+        }
+
+        nav a {
+            color: white;
+            padding: 15px 20px;
+            text-decoration: none;
+            display: block;
+            transition: background-color 0.3s ease;
+        }
+
+        nav a:hover {
+            background-color: #575757;
+        }
+
+        .content {
+            margin-left: 220px;
+            padding: 20px;
+            position: relative;
+            z-index: 1; /* 确保内容在背景之上 */
+        }
+
+        .section {
+            margin-top: 20px;
+        }
+
+        .recommendations {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 10px;
+        }
+
+        .item {
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .item a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .image-container {
+            position: relative;
+            width: 100%;
+            padding-top: 100%;
+            overflow: hidden;
+        }
+
+        .item img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .item img.loaded {
+            opacity: 1;
+        }
+
+        .img-placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #eee;
+        }
+
+        .item-info {
+            padding: 12px;
+            text-align: center;
+        }
+
+        .item h4 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .item p {
+            margin: 0;
+            color: #666;
+            font-size: 12px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            grid-column: 1 / -1;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        footer {
+            background-color: rgba(36, 36, 36, 0.8); /* 半透明 */
+            color: white;
+            text-align: center;
+            padding: 10px;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+            z-index: 1; /* 确保页脚在背景之上 */
+        }
+
+        /* 响应式布局 */
+        @media (max-width: 768px) {
+            /* 移动端壁纸 */
+            body {
+                background-image: url('https://haowallpaper.com/link/common/file/getCroppingImg/15595323950666048');
+                background-attachment: fixed; /* 固定背景 */
+            }
+
+            .recommendations {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 15px;
+            }
+
+            nav {
+                width: 100%;
+                height: auto;
+                position: relative; /* 改为相对定位，避免覆盖内容 */
+                display: flex;
+                justify-content: center;
+                padding: 10px 0;
+                background-color: rgba(51, 51, 51, 0.8); /* 半透明 */
+            }
+
+            nav a {
+                padding: 8px 15px;
+                margin: 0 5px;
+                display: inline-block;
+            }
+
+            .content {
+                margin-left: 0;
+                padding: 15px;
+                margin-bottom: 60px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .recommendations {
+                grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+                gap: 10px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            h3 {
+                font-size: 1.2em;
+            }
+        }
+
+        /* 触摸设备优化 */
+        @media (hover: none) {
+            .item:hover {
+                transform: none;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            }
+
+            nav a:hover {
+                background-color: transparent;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>网易云工具集</h1>
+</header>
+
+<nav>
+    <a href="index.html">首页</a>
+    <a href="so.html">歌曲搜索</a>
+    <a href="MVD.html">MV下载</a>
+</nav>
+
+<div class="content">
+    <h2>欢迎使用网易云工具集</h2>
+
+    <!-- 歌单推荐 Section -->
+    <div class="section">
+        <h3>歌单推荐</h3>
+        <div id="playlistRecommendations" class="recommendations"></div>
+    </div>
+
+    <!-- 音乐推荐 Section -->
+    <div class="section">
+        <h3>音乐推荐</h3>
+        <div id="songRecommendations" class="recommendations"></div>
+    </div>
+</div>
+
+<footer>
+    <p>某云工具集</p>
+</footer>
+
+<script defer>
+    // 图片懒加载函数
+    function lazyLoadImage(img) {
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const imgElem = entry.target;
+                    imgElem.src = imgElem.dataset.src;
+                    imgElem.onload = () => imgElem.classList.add('loaded');
+                    observer.unobserve(imgElem);
+                }
+            });
+        });
+        observer.observe(img);
+    }
+
+    // 格式化播放次数
+    function formatPlayCount(count) {
+        if (count > 100000000) {
+            return (count / 100000000).toFixed(1) + '亿';
+        }
+        if (count > 10000) {
+            return (count / 10000).toFixed(1) + '万';
+        }
+        return count;
+    }
+
+    // 获取歌单推荐
+    function fetchPlaylistRecommendations() {
+        const playlistContainer = document.getElementById("playlistRecommendations");
+
+        playlistContainer.innerHTML = `
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <p>正在加载推荐歌单...</p>
+            </div>
+        `;
+
+        fetch("https://www.markingchen.ink/personalized")
+            .then(response => response.json())
+            .then(data => {
+                playlistContainer.innerHTML = '';
+                if (data.code === 200) {
+                    data.result.forEach(playlist => {
+                        const playlistItem = `
+                            <div class="item">
+                                <a href="https://music.163.com/#/playlist?id=${playlist.id}" target="_blank">
+                                    <div class="image-container">
+                                        <div class="img-placeholder"></div>
+                                        <img data-src="${playlist.picUrl}" alt="${playlist.name}">
+                                    </div>
+                                    <div class="item-info">
+                                        <h4>${playlist.name}</h4>
+                                        <p>播放数: ${formatPlayCount(playlist.playCount)}</p>
+                                    </div>
+                                </a>
+                            </div>
+                        `;
+                        playlistContainer.insertAdjacentHTML('beforeend', playlistItem);
+                    });
+
+                    document.querySelectorAll('.item img').forEach(img => lazyLoadImage(img));
+                }
+            })
+            .catch(error => {
+                playlistContainer.innerHTML = `
+                    <div class="loading">
+                        <p>加载失败，请稍后重试</p>
+                        <button onclick="fetchPlaylistRecommendations()">重试</button>
+                    </div>
+                `;
+            });
+    }
+
+    // 获取音乐推荐
+    function fetchSongRecommendations() {
+        const songContainer = document.getElementById("songRecommendations");
+
+        songContainer.innerHTML = `
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <p>正在加载推荐音乐...</p>
+            </div>
+        `;
+
+        fetch("https://www.markingchen.ink/recommend/songs")
+            .then(response => response.json())
+            .then(data => {
+                songContainer.innerHTML = '';
+                if (data.code === 200) {
+                    data.data.dailySongs.forEach(song => {
+                        const songItem = `
+                            <div class="item">
+                                <a href="https://music.163.com/#/song?id=${song.id}" target="_blank">
+                                    <div class="image-container">
+                                        <div class="img-placeholder"></div>
+                                        <img data-src="${song.al.picUrl}" alt="${song.name}">
+                                    </div>
+                                    <div class="item-info">
+                                        <h4>${song.name}</h4>
+                                        <p>${song.ar[0].name}</p>
+                                    </div>
+                                </a>
+                            </div>
+                        `;
+                        songContainer.insertAdjacentHTML('beforeend', songItem);
+                    });
+
+                    document.querySelectorAll('.item img').forEach(img => lazyLoadImage(img));
+                }
+            })
+            .catch(error => {
+                songContainer.innerHTML = `
+                    <div class="loading">
+                        <p>加载失败，请稍后重试</p>
+                        <button onclick="fetchSongRecommendations()">重试</button>
+                    </div>
+                `;
+            });
+    }
+
+    // 页面加载时获取推荐内容
+    window.onload = function() {
+        fetchPlaylistRecommendations();
+        fetchSongRecommendations();
+    };
+</script>
+
+</body>
+</html>

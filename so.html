@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>某云工具集</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      /* 设置固定背景 */
+      background-image: url('https://haowallpaper.com/link/common/file/previewFileImg/15557854820208960');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;  /* 背景固定 */
+      transition: background-image 0.5s ease-in-out;
+    }
+    header {
+      background-color: #242424;
+      color: white;
+      padding: 10px;
+      text-align: center;
+      position: relative;
+    }
+    /* 汉堡菜单按钮，仅移动设备显示 */
+    .menu-toggle {
+      display: none;
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 24px;
+      cursor: pointer;
+      color: white;
+    }
+    nav {
+      background-color: #333;
+      color: white;
+      width: 200px;
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      padding-top: 20px;
+      transition: transform 0.3s ease;
+    }
+    nav a {
+      color: white;
+      padding: 10px 15px;
+      text-decoration: none;
+      display: block;
+    }
+    nav a:hover {
+      background-color: #575757;
+    }
+    .content {
+      margin-left: 220px;
+      padding: 20px;
+    }
+    .search-box {
+      margin: 20px 0;
+      position: relative;
+    }
+    .search-box input {
+      width: 300px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    #searchSuggestions {
+      background-color: white;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      padding: 5px;
+      position: absolute;
+      width: 300px;
+      z-index: 100;
+    }
+    #searchSuggestions li {
+      padding: 5px;
+      cursor: pointer;
+    }
+    #searchSuggestions li:hover {
+      background-color: #f4f4f4;
+    }
+    .song-list {
+      list-style-type: none;
+      padding: 0;
+    }
+    .song-item {
+      background-color: white;
+      margin: 10px 0;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .song-item:hover {
+      background-color: #f9f9f9;
+    }
+    footer {
+      background-color: #242424;
+      color: white;
+      text-align: center;
+      padding: 10px;
+      position: fixed;
+      width: 100%;
+      bottom: 0;
+    }
+    #audioPlayer {
+      width: 100%;
+      margin-top: 20px;
+    }
+    .comment-section {
+      margin-top: 20px;
+    }
+    .comment-item {
+      margin-bottom: 10px;
+    }
+    #commentsToggle {
+      display: block;
+      margin-top: 10px;
+      cursor: pointer;
+      color: #007BFF;
+    }
+    #hotSearchSection button {
+      margin: 5px;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+    .slider {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+    }
+    .slider input {
+      margin-left: 10px;
+    }
+
+    /* 响应式样式 */
+    @media (max-width: 768px) {
+      /* 移动端壁纸 */
+      body {
+        background-image: url('https://haowallpaper.com/link/common/file/getCroppingImg/15595323950666048');
+      }
+      /* 将导航栏隐藏，移动端使用汉堡菜单 */
+      nav {
+        width: 200px;
+        height: 100vh;
+        position: fixed;
+        top: 0;
+        left: -220px;  /* 默认隐藏 */
+        padding-top: 20px;
+        z-index: 1000;
+      }
+      nav.active {
+        transform: translateX(220px);
+      }
+      /* 显示汉堡菜单按钮 */
+      .menu-toggle {
+        display: block;
+      }
+      /* 添加遮罩层样式 */
+      .overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 999;
+      }
+      .overlay.active {
+        display: block;
+      }
+      /* 内容区域全宽显示 */
+      .content {
+        margin-left: 0;
+        padding: 20px;
+      }
+      .search-box input,
+      #searchSuggestions {
+        width: 100%;
+        box-sizing: border-box;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <!-- 汉堡菜单按钮 -->
+  <span class="menu-toggle"><i class="fas fa-bars"></i></span>
+  <h1>某云工具集</h1>
+</header>
+
+<!-- 导航菜单 -->
+<nav id="sideNav">
+  <a href="index.html">首页</a>
+  <a href="so.html">歌曲搜索</a>
+  <a href="MVD.html">MV下载</a>
+</nav>
+
+<!-- 遮罩层 -->
+<div class="overlay" id="overlay"></div>
+
+<div class="content">
+  <h2>歌曲搜索与下载</h2>
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="输入歌曲名称或ID进行搜索..." oninput="searchSong()">
+    <div id="searchSuggestions"></div>
+    <button onclick="searchSong()">搜索</button>
+  </div>
+
+  <div class="slider">
+    <label for="toggleSuggestions">关闭搜索建议(荐)</label>
+    <input type="checkbox" id="toggleSuggestions" onchange="toggleSearchSuggestions()">
+  </div>
+
+  <div id="hotSearchSection"></div> <!-- 热搜推荐 -->
+
+  <ul id="songList" class="song-list">
+    <!-- 搜索结果将显示在这里 -->
+  </ul>
+
+  <!-- 播放器区域 -->
+  <audio id="audioPlayer" controls></audio>
+  <button id="downloadButton" style="display:none;">下载歌曲</button>
+
+  <!-- 评论区域 -->
+  <div id="comments" class="comment-section"></div>
+  <button id="commentsToggle" style="display:none;" onclick="toggleComments()">显示更多评论</button>
+</div>
+
+<footer>
+  <p>评论在最下方-网易云工具集-VIP音乐无法播放</p>
+</footer>
+
+<script>
+  // 汉堡菜单与遮罩层控制
+  const menuToggle = document.querySelector('.menu-toggle');
+  const sideNav = document.getElementById('sideNav');
+  const overlay = document.getElementById('overlay');
+
+  menuToggle.addEventListener('click', () => {
+    sideNav.classList.toggle('active');
+    overlay.classList.toggle('active');
+  });
+
+  overlay.addEventListener('click', () => {
+    sideNav.classList.remove('active');
+    overlay.classList.remove('active');
+  });
+
+  let currentSongId = null;
+  let allComments = [];
+  let suggestionsEnabled = true;  // 默认为开启搜索建议
+
+  // 播放歌曲
+  function playSong(songId) {
+    const url = `https://music.163.com/song/media/outer/url?id=${songId}`;
+    const audioPlayer = document.getElementById('audioPlayer');
+    audioPlayer.src = url;
+    audioPlayer.play();
+    document.getElementById('downloadButton').style.display = 'inline-block';
+    document.getElementById('downloadButton').onclick = function() {
+      window.location.href = url;
+    };
+    currentSongId = songId;
+  }
+
+  // 下载歌曲
+  function downloadSong(songId) {
+    const url = `https://music.163.com/song/media/outer/url?id=${songId}`;
+    window.location.href = url;
+  }
+
+  // 查看评论
+  function loadComments(songId) {
+    const url = `https://www.markingchen.ink/comment/music?id=${songId}&limit=5`;
+
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        const comments = data.hotComments;
+        allComments = comments;
+        const commentsSection = document.getElementById('comments');
+        commentsSection.innerHTML = '<h3>最新评论：</h3>';
+        
+        comments.forEach(comment => {
+          const commentDiv = document.createElement('div');
+          commentDiv.classList.add('comment-item');
+          commentDiv.innerHTML = `
+            <p><strong>${comment.user.nickname}</strong>：${comment.content}</p>
+            <p><img src="${comment.user.avatarUrl}" width="50" height="50" alt="${comment.user.nickname}"></p>
+          `;
+          commentsSection.appendChild(commentDiv);
+        });
+
+        document.getElementById('commentsToggle').style.display = 'block';
+      })
+      .catch(error => console.error('Error fetching comments:', error));
+  }
+
+  // 切换显示评论
+  function toggleComments() {
+    const commentsSection = document.getElementById('comments');
+    commentsSection.innerHTML = '<h3>最新评论：</h3>';
+    
+    allComments.forEach(comment => {
+      const commentDiv = document.createElement('div');
+      commentDiv.classList.add('comment-item');
+      commentDiv.innerHTML = `
+        <p><strong>${comment.user.nickname}</strong>：${comment.content}</p>
+        <p><img src="${comment.user.avatarUrl}" width="50" height="50" alt="${comment.user.nickname}"></p>
+      `;
+      commentsSection.appendChild(commentDiv);
+    });
+
+    document.getElementById('commentsToggle').style.display = 'none';
+  }
+
+  // 下载歌词功能
+  function downloadLyrics(songId) {
+    const url = `https://www.markingchen.ink/lyric?id=${songId}`;
+
+    fetch(url)
+      .then(response => response.json())
+      .then(data => {
+        const lyrics = data.lrc.lyric;
+        const blob = new Blob([lyrics], { type: 'text/plain' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `song-${songId}-lyrics.txt`;
+        link.click();
+      })
+      .catch(error => console.error('Error fetching lyrics:', error));
+  }
+
+  // 获取关键词搜索建议
+  function searchSong() {
+    const query = document.getElementById('searchInput').value;
+    let url = '';
+
+    // 清空之前的搜索建议
+    document.getElementById('searchSuggestions').innerHTML = '';
+
+    if (query.length > 0 && suggestionsEnabled) {
+      // 获取关键词搜索建议
+      fetch(`https://www.markingchen.ink/search/suggest?keywords=${query}&type=mobile`)
+        .then(response => response.json())
+        .then(data => {
+          const suggestions = data.result.allMatch;
+          if (suggestions.length > 0) {
+            const suggestionList = document.createElement('ul');
+            suggestions.forEach(suggestion => {
+              const li = document.createElement('li');
+              li.textContent = suggestion.keyword;
+              li.onclick = () => {
+                document.getElementById('searchInput').value = suggestion.keyword;
+                searchSong();
+              };
+              suggestionList.appendChild(li);
+            });
+            document.getElementById('searchSuggestions').appendChild(suggestionList);
+          }
+        })
+        .catch(error => console.error('Error fetching suggestions:', error));
+    }
+
+    // 判断输入是否为10位数字（歌曲ID），如果是则直接播放歌曲
+    if (/^\d{10}$/.test(query)) {
+      url = `https://music.163.com/song/media/outer/url?id=${query}`;
+      playSong(query);
+    } else {
+      url = `https://www.markingchen.ink/cloudsearch?keywords=${query}`;
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          const songs = data.result.songs;
+          const songList = document.getElementById('songList');
+          songList.innerHTML = '';
+
+          if (songs.length === 0) {
+            songList.innerHTML = '<li>没有找到相关歌曲。</li>';
+            return;
+          }
+
+          songs.forEach(song => {
+            const li = document.createElement('li');
+            li.classList.add('song-item');
+            li.innerHTML = `
+              <h3>${song.name}</h3>
+              <p>演唱者：${song.ar[0].name}</p>
+              <button onclick="playSong(${song.id})">播放</button>
+              <button onclick="downloadSong(${song.id})">下载</button>
+              <button onclick="loadComments(${song.id})">查看评论</button>
+              <button onclick="downloadLyrics(${song.id})">下载歌词</button>
+            `;
+            songList.appendChild(li);
+          });
+        })
+        .catch(error => console.error('Error fetching data:', error));
+    }
+  }
+
+  // 加载热搜关键词
+  function loadHotSearch() {
+    fetch('https://www.markingchen.ink/search/hot/detail')
+      .then(response => response.json())
+      .then(data => {
+        const hotSearchList = data.data;
+        const hotSearchSection = document.getElementById('hotSearchSection');
+        hotSearchSection.innerHTML = '<h3>热门搜索：</h3>';
+        
+        hotSearchList.forEach(item => {
+          const button = document.createElement('button');
+          button.textContent = item.searchWord;
+          button.onclick = () => {
+            document.getElementById('searchInput').value = item.searchWord;
+            searchSong();
+          };
+          hotSearchSection.appendChild(button);
+        });
+      })
+      .catch(error => console.error('Error fetching hot search:', error));
+  }
+
+  // 切换搜索建议显示状态
+  function toggleSearchSuggestions() {
+    suggestionsEnabled = !suggestionsEnabled;
+  }
+
+  // 页面加载时执行
+  document.addEventListener('DOMContentLoaded', () => {
+    loadHotSearch();
+  });
+</script>
+
+</body>
+</html>

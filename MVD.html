@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MV下载</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            /* 默认背景设置为PC端壁纸 */
+            background-image: url('https://haowallpaper.com/link/common/file/previewFileImg/15557854820208960');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed; /* 固定背景 */
+            transition: background-image 0.5s ease-in-out;
+        }
+        header {
+            background-color: rgba(36, 36, 36, 0.8);
+            color: white;
+            padding: 10px;
+            text-align: center;
+            position: relative;
+        }
+        /* Hamburger menu button */
+        .menu-toggle {
+            display: none;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        nav {
+            background-color: rgba(51, 51, 51, 0.9);
+            color: white;
+            width: 200px;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            padding-top: 60px; /* Adjusted for header */
+            transition: transform 0.3s ease;
+            overflow-y: auto;
+        }
+        nav a {
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            display: block;
+        }
+        nav a:hover {
+            background-color: #575757;
+        }
+        .content {
+            margin-left: 220px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            min-height: 100vh;
+            box-sizing: border-box;
+        }
+        .search-box {
+            margin: 20px 0;
+        }
+        .search-box input {
+            width: 300px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .song-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .song-item {
+            background-color: white;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .song-item:hover {
+            background-color: #f9f9f9;
+        }
+        footer {
+            background-color: rgba(36, 36, 36, 0.8);
+            color: white;
+            text-align: center;
+            padding: 10px;
+            position: fixed;
+            width: 100%;
+            bottom: 0;
+        }
+        #audioPlayer {
+            width: 100%;
+            margin-top: 20px;
+        }
+        .comment-section {
+            margin-top: 20px;
+        }
+        .comment-item {
+            margin-bottom: 10px;
+        }
+        #commentsToggle {
+            display: block;
+            margin-top: 10px;
+            cursor: pointer;
+            color: #007BFF;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 768px) {
+            /* 设置移动端背景壁纸 */
+            body {
+                background-image: url('https://haowallpaper.com/link/common/file/getCroppingImg/15595323950666048');
+            }
+            /* Adjust nav for mobile */
+            nav {
+                width: 200px;
+                height: 100vh;
+                position: fixed;
+                top: 0;
+                left: -220px; /* Hide nav by default */
+                padding-top: 60px;
+                z-index: 1000;
+                background-color: rgba(51, 51, 51, 0.95);
+            }
+            nav.active {
+                transform: translateX(220px);
+            }
+            /* Show hamburger menu */
+            .menu-toggle {
+                display: block;
+                color: white;
+            }
+            /* Adjust content */
+            .content {
+                margin-left: 0;
+                padding: 20px;
+                background: rgba(255, 255, 255, 0.95);
+            }
+            .search-box input {
+                width: 100%;
+                box-sizing: border-box;
+            }
+            /* Overlay when nav is open */
+            .overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+            }
+            .overlay.active {
+                display: block;
+            }
+            footer {
+                position: static;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <span class="menu-toggle"><i class="fas fa-bars"></i></span>
+    <h1>某云工具集</h1>
+</header>
+
+<nav id="sideNav">
+    <a href="index.html">首页</a>
+    <a href="so.html">歌曲搜索</a>
+    <a href="MVD.html">MV下载</a>
+</nav>
+
+<div class="overlay" id="overlay"></div>
+
+<div class="content">
+    <h2>请输入MV ID进行下载</h2>
+    <div class="search-box">
+        <input type="text" id="mvIdInput" placeholder="输入MV ID">
+        <button onclick="downloadMV()">加载</button>
+    </div>
+
+    <button id="downloadButton" onclick="initiateDownload()" style="display:none;">下载MV</button>
+
+    <!-- Section for displaying MV comments -->
+    <div id="mvComments" style="margin-top: 30px;">
+        <h3>MV 评论</h3>
+        <div id="commentsList"></div> <!-- This will hold the comments -->
+    </div>
+</div>
+
+<footer>
+    <p>某云工具集</p>
+</footer>
+
+<script>
+    // Toggle navigation for mobile
+    const menuToggle = document.querySelector('.menu-toggle');
+    const sideNav = document.getElementById('sideNav');
+    const overlay = document.getElementById('overlay');
+
+    menuToggle.addEventListener('click', () => {
+        sideNav.classList.toggle('active');
+        overlay.classList.toggle('active');
+    });
+
+    overlay.addEventListener('click', () => {
+        sideNav.classList.remove('active');
+        overlay.classList.remove('active');
+    });
+
+    function downloadMV() {
+        const mvId = document.getElementById('mvIdInput').value;
+        
+        if (mvId) {
+            const url = `https://www.markingchen.ink/mv/url?id=${mvId}&r=1080`;
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === 200) {
+                        const mvUrl = data.data.url;
+                        if (mvUrl) {
+                            document.getElementById('downloadButton').style.display = 'inline-block';
+                            document.getElementById('downloadButton').onclick = function () {
+                                window.location.href = mvUrl;
+                            };
+                        } else {
+                            alert("未找到MV资源！");
+                        }
+                    } else {
+                        alert("MV下载失败，请检查ID！");
+                    }
+                })
+                .catch(error => {
+                    alert("请求失败，请稍后再试！");
+                    console.error('Error fetching MV URL:', error);
+                });
+        } else {
+            alert("请输入MV ID！");
+        }
+    }
+
+    function initiateDownload() {
+        const mvId = document.getElementById('mvIdInput').value;
+        const downloadUrl = `https://www.markingchen.ink/mv/url?id=${mvId}&r=1080`;
+        window.location.href = downloadUrl;
+    }
+
+    // Fetch and display MV comments
+    function fetchMVComments(mvId) {
+        const commentsUrl = `https://www.markingchen.ink/comment/mv?id=${mvId}`;
+
+        fetch(commentsUrl)
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    const comments = data.hotComments;
+                    let commentsHtml = '';
+                    comments.forEach(comment => {
+                        commentsHtml += `
+                            <div class="comment">
+                                <img src="${comment.user.avatarUrl}" alt="${comment.user.nickname}" style="width: 50px; height: 50px; border-radius: 50%;">
+                                <strong>${comment.user.nickname}</strong>: <p>${comment.content}</p>
+                                <p><small>点赞数: ${comment.likedCount}</small></p>
+                            </div>
+                            <hr>`;
+                    });
+                    document.getElementById('commentsList').innerHTML = commentsHtml;
+                } else {
+                    document.getElementById('commentsList').innerHTML = "未找到评论。";
+                }
+            })
+            .catch(error => {
+                document.getElementById('commentsList').innerHTML = "评论加载失败，请稍后再试！";
+                console.error('Error fetching MV comments:', error);
+            });
+    }
+
+    // Trigger comment fetch on MV ID input change or download initiation
+    document.getElementById('mvIdInput').addEventListener('change', function() {
+        const mvId = this.value;
+        if (mvId) {
+            fetchMVComments(mvId);
+        }
+    });
+</script>
+
+</body>
+</html>
